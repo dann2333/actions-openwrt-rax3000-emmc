@@ -30,6 +30,11 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
+  # Optional: pin the source tree to a specific lede commit. Empty = track
+  # REPO_BRANCH (whatever upstream is today, including its kernel version).
+  # The commit that built a given firmware is recorded in that release's
+  # version.buildinfo, e.g. r7736-8e68ef127 -> REPO_COMMIT: 8e68ef127.
+  REPO_COMMIT: ''
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
@@ -68,6 +73,11 @@ jobs:
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
+        if [ -n "$REPO_COMMIT" ]; then
+          git -C openwrt checkout "$REPO_COMMIT"
+        fi
+        echo "Building from $(git -C openwrt rev-parse --short HEAD) ($(git -C openwrt log -1 --format=%cd --date=short))"
+        echo "Kernel: $(grep -E '^KERNEL_PATCHVER' openwrt/target/linux/mediatek/Makefile)"
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
     - name: Load custom feeds
       run: |
